@@ -2,6 +2,65 @@
 
 A Go library for calling different AI coding agent CLIs (Docker Agent, Claude Code, Pi, Codex, opencode) through a unified interface. Switch between agents by changing a single line of code.
 
+**This fork adds one more: Command Code.**
+
+## What's new here — `commandcode`
+
+Use the [Command Code](https://commandcode.ai) CLI (`cmd`) as the engine behind a
+[Docker Agent](https://github.com/docker/docker-agent) agent, alongside the built-in
+`claude-code`, `codex`, `opencode`, and `pi` harnesses.
+
+A Docker Agent config can then say:
+
+```yaml
+version: "16"
+agents:
+  root:
+    description: A Command Code agent
+    harness:
+      type: command-code
+```
+
+…and every turn is run by `cmd -p --output-format json`, whose newline-delimited
+JSON this package turns into the library's normal events — text, thinking, tool
+calls, tool results, and token usage.
+
+`cmd` already speaks the shape a harness needs: `-p` for a non-interactive run,
+`--output-format json` for the NDJSON stream (`run_start.sessionId` for the
+session id, `text_delta`/`thinking_delta` for output, `tool_queued`/
+`tool_completed` for tools, and a final `result` line with the answer and token
+usage), plus `-r` to resume, `-m`/`--effort` for the model and reasoning effort,
+and `--yolo` to skip permission prompts.
+
+### Files
+
+- `commandcode/` — the harness package (`commandcode.go`, `parse.go`, tests, `testdata/`)
+- `docker-agent-wiring.patch` — the few lines Docker Agent itself needs (type
+  constant, validation enum, JSON-schema enum). Nothing else in Docker Agent changes.
+
+**Permissions.** A harness hands the whole turn to the external CLI, so Docker
+Agent's `--safety` policy and its toolsets do not reach inside it — the CLI owns
+the tools. `command-code` therefore runs `cmd` with `--yolo`, exactly as the
+`claude-code` adapter runs `claude` with `--dangerously-skip-permissions`.
+
+### Wire it into Docker Agent
+
+```
+go mod edit -replace github.com/rumpl/harness=github.com/PremModhaOfficial/harness@<version>
+cd docker-agent && go build -o ./bin/docker-agent .
+```
+
+If the change lands in `rumpl/harness` upstream, the override becomes a plain
+dependency bump and the patch shrinks to the constant, enum, and schema lines.
+
+### Test it yourself
+
+```sh
+cd commandcode && go test ./... && go vet ./... && gofmt -l .
+```
+
+See [`PROOF.md`](PROOF.md) for the exact commands and the results they produced.
+
 ## Install
 
 ```
