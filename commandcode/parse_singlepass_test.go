@@ -253,14 +253,22 @@ func TestParseSinglePassEdgeLines(t *testing.T) {
 		{"run_start without session", `{"type":"event","event":{"type":"run_start"}}`, nil},
 		{"empty text delta", `{"type":"event","event":{"type":"text_delta","delta":""}}`, nil},
 		{"empty thinking delta", `{"type":"event","event":{"type":"thinking_delta","delta":""}}`, nil},
-		{"tool_completed with error item", `{"type":"event","event":{"type":"tool_completed","toolCallId":"c1","toolName":"bash","result":[{"type":"error","text":"boom"}]}}`,
-			[]wantEvent{{typ: harness.EventToolResult, toolID: "c1", toolName: "bash", toolOutput: "boom", toolError: true}}},
-		{"result malformed usage", `{"type":"result","finalText":"X","usage":"nope"}`,
-			[]wantEvent{{typ: harness.EventResult, result: "X", usage: &wantUsage{}}}},
-		{"result absent usage", `{"type":"result","finalText":"Y"}`,
-			[]wantEvent{{typ: harness.EventResult, result: "Y", usage: nil}}},
-		{"result full usage", `{"type":"result","subtype":"success","usage":{"inputTokens":1,"outputTokens":2,"cacheReadTokens":3,"cacheWriteTokens":7},"durationMs":5,"finalText":"z"}`,
-			[]wantEvent{{typ: harness.EventResult, result: "z", usage: &wantUsage{input: 1, output: 2, cacheRead: 3, cacheWrite: 7, numTurns: 0, durationMs: 5}}}},
+		{
+			"tool_completed with error item", `{"type":"event","event":{"type":"tool_completed","toolCallId":"c1","toolName":"bash","result":[{"type":"error","text":"boom"}]}}`,
+			[]wantEvent{{typ: harness.EventToolResult, toolID: "c1", toolName: "bash", toolOutput: "boom", toolError: true}},
+		},
+		{
+			"result malformed usage", `{"type":"result","finalText":"X","usage":"nope"}`,
+			[]wantEvent{{typ: harness.EventResult, result: "X", usage: &wantUsage{}}},
+		},
+		{
+			"result absent usage", `{"type":"result","finalText":"Y"}`,
+			[]wantEvent{{typ: harness.EventResult, result: "Y", usage: nil}},
+		},
+		{
+			"result full usage", `{"type":"result","subtype":"success","usage":{"inputTokens":1,"outputTokens":2,"cacheReadTokens":3,"cacheWriteTokens":7},"durationMs":5,"finalText":"z"}`,
+			[]wantEvent{{typ: harness.EventResult, result: "z", usage: &wantUsage{input: 1, output: 2, cacheRead: 3, cacheWrite: 7, numTurns: 0, durationMs: 5}}},
+		},
 	}
 
 	for _, tt := range tests {

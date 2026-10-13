@@ -368,7 +368,7 @@ func parseFixture(t *testing.T, name string) []harness.Event {
 
 	p := New("").(*provider)
 	var events []harness.Event
-	for _, line := range strings.Split(strings.TrimSpace(string(data)), "\n") {
+	for line := range strings.SplitSeq(strings.TrimSpace(string(data)), "\n") {
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
