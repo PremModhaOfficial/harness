@@ -46,9 +46,14 @@ the tools. `command-code` therefore runs `cmd` with `--yolo`, exactly as the
 ### Wire it into Docker Agent
 
 ```
-go mod edit -replace github.com/rumpl/harness=github.com/PremModhaOfficial/harness@<version>
+go mod edit -replace github.com/rumpl/harness=github.com/PremModhaOfficial/harness@v0.1.0
+go mod tidy
 cd docker-agent && go build -o ./bin/docker-agent .
 ```
+
+`go mod tidy` is what writes the fork's `go.sum` entries; without it the build
+stops with `missing go.sum entry for module providing package
+github.com/rumpl/harness`.
 
 If the change lands in `rumpl/harness` upstream, the override becomes a plain
 dependency bump and the patch shrinks to the constant, enum, and schema lines.
